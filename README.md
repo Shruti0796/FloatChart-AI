@@ -2,6 +2,8 @@
 AI-powered conversational interface for ARGO ocean data discovery and visualization
 # FloatChat
 
+[View Intractive README] (https://shruti0796.github.io/FloatChart-AI/)
+
 ## Overview
 
 FloatChat is a conversational data exploration platform designed to simplify access to large-scale oceanographic datasets. It allows users to query, analyze, and visualize ARGO ocean data using natural language, eliminating the need for complex scripts or domain-specific tools.
