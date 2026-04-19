@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>FloatChat — README</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Syne:wght@400;700;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --navy: #020d1a;
+    --deep: #041529;
+    --panel: #071e33;
+    --border: #0d3a5c;
+    --cyan: #00d4ff;
+    --teal: #00b4cc;
+    --glow: #0af0ff;
+    --text: #c8e6f5;
+    --muted: #5a8aaa;
+    --white: #f0faff;
+    --accent: #ff6b35;
+    --green: #00ffa3;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--navy);
+    color: var(--text);
+    font-family: 'Space Grotesk', sans-serif;
+    overflow-x: hidden;
+    cursor: none;
+  }
+
+  /* ── Custom Cursor ── */
+  #cursor {
+    width: 12px; height: 12px;
+    background: var(--cyan);
+    border-radius: 50%;
+    position: fixed; top: 0; left: 0;
+    pointer-events: none;
+    z-index: 9999;
+    transform: translate(-50%, -50%);
+    transition: transform 0.08s ease, background 0.2s;
+    mix-blend-mode: screen;
+  }
+  #cursor-ring {
+    width: 36px; height: 36px;
+    border: 1.5px solid var(--cyan);
+    border-radius: 50%;
+    position: fixed; top: 0; left: 0;
+    pointer-events: none;
+    z-index: 9998;
+    transform: translate(-50%, -50%);
+    transition: transform 0.18s ease, width 0.2s, height 0.2s, border-color 0.2s;
+    opacity: 0.6;
+  }
+  body:has(a:hover) #cursor-ring,
+  body:has(button:hover) #cursor-ring { width: 52px; height: 52px; border-color: var(--glow); }
+
+  /* ── Ocean Canvas ── */
+  #ocean-canvas {
+    position: fixed; inset: 0;
+    z-index: 0;
+    opacity: 0.35;
+  }
+
+  /* ── Layout ── */
+  .wrapper {
+    position: relative;
+    z-index: 1;
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 0 24px;
+  }
+
+  /* ── NAV ── */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0;
+    z-index: 100;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 18px 40px;
+    background: rgba(2,13,26,0.7);
+    backdrop-filter: blur(18px);
+    border-bottom: 1px solid rgba(0,212,255,0.08);
+  }
+  .nav-logo {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 1.3rem;
+    color: var(--cyan);
+    letter-spacing: -0.5px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .nav-logo span { color: var(--white); }
+  .nav-links { display: flex; gap: 28px; }
+  .nav-links a {
+    color: var(--muted);
+    text-decoration: none;
+    font-size: 0.82rem;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    transition: color 0.2s;
+  }
+  .nav-links a:hover { color: var(--cyan); }
+
+  /* ── HERO ── */
+  .hero {
+    min-height: 100vh;
+    display: flex; align-items: center; justify-content: center;
+    flex-direction: column;
+    text-align: center;
+    padding: 120px 24px 80px;
+    position: relative;
+  }
+  .hero-badge {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: rgba(0,212,255,0.07);
+    border: 1px solid rgba(0,212,255,0.2);
+    border-radius: 999px;
+    padding: 6px 16px;
+    font-size: 0.72rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--cyan);
+    margin-bottom: 32px;
+    animation: fadeUp 0.8s ease both;
+  }
+  .hero-badge::before { content: '●'; font-size: 0.5rem; animation: pulse 2s infinite; }
+  @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.3; } }
+
+  h1.hero-title {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(3rem, 8vw, 6.5rem);
+    font-weight: 800;
+    line-height: 1;
+    color: var(--white);
+    margin-bottom: 16px;
+    animation: fadeUp 0.9s 0.1s ease both;
+  }
+  h1.hero-title .accent { color: var(--cyan); }
+
+  .hero-sub {
+    font-size: clamp(1rem, 2vw, 1.25rem);
+    color: var(--muted);
+    max-width: 560px;
+    line-height: 1.7;
+    margin-bottom: 0;
+    animation: fadeUp 1s 0.2s ease both;
+  }
+
+
+
+  @keyframes fadeUp {
+    from { opacity:0; transform:translateY(28px); }
+    to   { opacity:1; transform:translateY(0); }
+  }
+
+  /* ── SCROLL INDICATOR ── */
+  .scroll-hint {
+    position: absolute;
+    bottom: 40px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex; flex-direction: column; align-items: center; gap: 8px;
+    color: var(--muted);
+    font-size: 0.7rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    animation: fadeUp 1s 0.6s both;
+  }
+  .scroll-line {
+    width: 1px; height: 48px;
+    background: linear-gradient(to bottom, var(--cyan), transparent);
+    animation: scrollLine 2s ease-in-out infinite;
+  }
+  @keyframes scrollLine {
+    0%,100% { transform: scaleY(1); opacity: 1; }
+    50%      { transform: scaleY(0.4); opacity: 0.4; }
+  }
+
+  /* ── SECTIONS ── */
+  section {
+    padding: 100px 0;
+  }
+  .section-label {
+    font-size: 0.7rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--cyan);
+    margin-bottom: 14px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .section-label::after { content:''; flex:1; height:1px; background: var(--border); max-width: 80px; }
+  h2.section-title {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(1.8rem, 4vw, 2.8rem);
+    font-weight: 800;
+    color: var(--white);
+    margin-bottom: 16px;
+    line-height: 1.15;
+  }
+  .section-desc {
+    color: var(--muted);
+    max-width: 560px;
+    line-height: 1.75;
+    font-size: 0.95rem;
+  }
+
+
+
+  /* ── FEATURE CARDS ── */
+  .features-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px,1fr));
+    gap: 16px;
+    margin-top: 48px;
+  }
+  .feature-card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 28px;
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+    cursor: none;
+  }
+  .feature-card::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: radial-gradient(circle at var(--mx,50%) var(--my,50%), rgba(0,212,255,0.06), transparent 60%);
+    opacity: 0;
+    transition: opacity 0.3s;
+    pointer-events: none;
+  }
+  .feature-card:hover { transform: translateY(-4px); border-color: rgba(0,212,255,0.3); box-shadow: 0 12px 48px rgba(0,212,255,0.08); }
+  .feature-card:hover::before { opacity: 1; }
+  .feature-icon {
+    width: 44px; height: 44px;
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.3rem;
+    margin-bottom: 16px;
+    background: rgba(0,212,255,0.08);
+    border: 1px solid rgba(0,212,255,0.15);
+  }
+  .feature-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--white);
+    margin-bottom: 8px;
+  }
+  .feature-desc {
+    font-size: 0.84rem;
+    color: var(--muted);
+    line-height: 1.65;
+  }
+
+  /* ── AGENTS SECTION ── */
+  .agents-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    margin-top: 48px;
+  }
+  @media (max-width: 640px) { .agents-row { grid-template-columns: 1fr; } }
+  .agent-card {
+    border-radius: 20px;
+    padding: 36px 28px;
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.25s;
+  }
+  .agent-card:hover { transform: translateY(-6px); }
+  .agent-rag { background: linear-gradient(135deg, #041d35, #062d4a); border: 1px solid #0d4a6e; }
+  .agent-marine { background: linear-gradient(135deg, #041d2a, #062a1e); border: 1px solid #0d4a3a; }
+  .agent-tag {
+    display: inline-block;
+    border-radius: 999px;
+    padding: 4px 12px;
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 20px;
+  }
+  .tag-rag { background: rgba(0,212,255,0.1); color: var(--cyan); border: 1px solid rgba(0,212,255,0.2); }
+  .tag-marine { background: rgba(0,255,163,0.1); color: var(--green); border: 1px solid rgba(0,255,163,0.2); }
+  .agent-name {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: var(--white);
+    margin-bottom: 12px;
+  }
+  .agent-desc { font-size: 0.88rem; color: var(--muted); line-height: 1.7; }
+  .agent-float {
+    position: absolute; bottom: -20px; right: -20px;
+    font-size: 6rem;
+    opacity: 0.08;
+    pointer-events: none;
+    transition: transform 0.3s;
+  }
+  .agent-card:hover .agent-float { transform: scale(1.15) rotate(-10deg); }
+
+  /* ── TECH STACK ── */
+  .tech-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 40px;
+  }
+  .tech-pill {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 8px 16px;
+    font-size: 0.82rem;
+    font-weight: 500;
+    color: var(--text);
+    font-family: 'JetBrains Mono', monospace;
+    transition: border-color 0.2s, color 0.2s, transform 0.15s;
+    cursor: none;
+  }
+  .tech-pill:hover { border-color: var(--cyan); color: var(--cyan); transform: translateY(-2px); }
+  .tech-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--cyan); flex-shrink:0; }
+
+  /* ── ARCHITECTURE ── */
+  .arch-flow {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    margin-top: 48px;
+    overflow-x: auto;
+    padding-bottom: 8px;
+  }
+  .arch-node {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 18px 20px;
+    text-align: center;
+    min-width: 120px;
+    flex-shrink: 0;
+    transition: border-color 0.2s, transform 0.2s;
+  }
+  .arch-node:hover { border-color: var(--cyan); transform: translateY(-3px); }
+  .arch-node-icon { font-size: 1.6rem; margin-bottom: 8px; }
+  .arch-node-name { font-size: 0.75rem; font-weight: 600; color: var(--white); }
+  .arch-node-sub { font-size: 0.65rem; color: var(--muted); margin-top: 3px; }
+  .arch-arrow {
+    flex-shrink: 0;
+    width: 40px;
+    text-align: center;
+    color: var(--cyan);
+    font-size: 1.1rem;
+    opacity: 0.5;
+  }
+
+
+
+  /* ── CHAT DEMO WIDGET ── */
+  .chat-demo {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    overflow: hidden;
+    margin-top: 48px;
+    max-width: 480px;
+  }
+  .chat-header {
+    background: var(--deep);
+    padding: 14px 20px;
+    display: flex; align-items: center; gap: 10px;
+    border-bottom: 1px solid var(--border);
+  }
+  .chat-dot { width:10px; height:10px; border-radius:50%; }
+  .chat-header-title { font-size: 0.8rem; font-weight: 600; color: var(--white); margin-left: 4px; }
+  .chat-body { padding: 20px; display: flex; flex-direction: column; gap: 12px; }
+  .chat-msg {
+    display: flex; gap: 10px; align-items: flex-start;
+  }
+  .chat-msg.user { flex-direction: row-reverse; }
+  .chat-avatar {
+    width: 30px; height: 30px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.75rem; font-weight: 700; flex-shrink: 0;
+  }
+  .av-bot { background: rgba(0,212,255,0.15); color: var(--cyan); border: 1px solid rgba(0,212,255,0.2); }
+  .av-user { background: rgba(255,107,53,0.15); color: var(--accent); border: 1px solid rgba(255,107,53,0.2); }
+  .chat-bubble {
+    background: var(--deep);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 10px 14px;
+    font-size: 0.82rem;
+    color: var(--text);
+    line-height: 1.6;
+    max-width: 80%;
+  }
+  .chat-msg.user .chat-bubble { background: rgba(0,212,255,0.06); border-color: rgba(0,212,255,0.15); }
+  .typing-indicator span {
+    display: inline-block;
+    width: 5px; height: 5px;
+    background: var(--cyan);
+    border-radius: 50%;
+    animation: blink 1.2s infinite;
+    margin: 0 2px;
+  }
+  .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+  .typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes blink { 0%,80%,100%{opacity:.2} 40%{opacity:1} }
+
+  /* ── FOOTER ── */
+  footer {
+    border-top: 1px solid var(--border);
+    padding: 48px 0 32px;
+    text-align: center;
+    color: var(--muted);
+    font-size: 0.82rem;
+  }
+  footer strong { color: var(--cyan); }
+
+  /* ── REVEAL ANIMATION ── */
+  .reveal {
+    opacity: 0;
+    transform: translateY(32px);
+    transition: opacity 0.7s ease, transform 0.7s ease;
+  }
+  .reveal.visible { opacity: 1; transform: translateY(0); }
+
+  /* ── SCROLLBAR ── */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: var(--navy); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  @media (max-width: 720px) {
+    nav { padding: 14px 20px; }
+    .nav-links { display: none; }
+    .agents-row { grid-template-columns: 1fr; }
+    .arch-flow { flex-direction: column; }
+    .arch-arrow { transform: rotate(90deg); }
+  }
+</style>
+</head>
+<body>
+
+<!-- Cursor -->
+<div id="cursor"></div>
+<div id="cursor-ring"></div>
+
+<!-- Ocean Canvas Background -->
+<canvas id="ocean-canvas"></canvas>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">🌊 Float<span>Chat</span></div>
+  <div class="nav-links">
+    <a href="#overview">Overview</a>
+    <a href="#agents">Agents</a>
+    <a href="#stack">Stack</a>
+    <a href="#architecture">Architecture</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="wrapper">
+    <div class="hero-badge">Indian Ocean Research Platform · Active Development</div>
+    <h1 class="hero-title">Float<span class="accent">Chat</span></h1>
+    <p class="hero-sub">
+      AI-powered conversational interface for ARGO ocean data discovery.<br/>
+      Talk to the deep. Understand the sea.
+    </p>
+
+  </div>
+  <div class="scroll-hint">
+    <div class="scroll-line"></div>
+    scroll
+  </div>
+</div>
+
+<!-- OVERVIEW -->
+<section id="overview">
+  <div class="wrapper">
+    <div class="reveal">
+      <div class="section-label">Overview</div>
+      <h2 class="section-title">Oceanography meets<br/>natural language</h2>
+      <p class="section-desc">
+        FloatChat is a conversational data exploration platform that makes accessing large-scale ARGO oceanographic datasets as easy as typing a question. No scripts. No NetCDF headaches. Just answers.
+      </p>
+    </div>
+
+
+
+    <div class="features-grid reveal">
+      <div class="feature-card">
+        <div class="feature-icon">💬</div>
+        <div class="feature-title">Natural Language Queries</div>
+        <div class="feature-desc">Ask questions in plain English. FloatChat translates them into structured data operations across ARGO NetCDF datasets.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">📊</div>
+        <div class="feature-title">Interactive Visualizations</div>
+        <div class="feature-desc">Get instant graphs, charts, and plots — powered by Plotly and Matplotlib — directly in the chat interface.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🤖</div>
+        <div class="feature-title">Dual AI Agents</div>
+        <div class="feature-desc">Switch between Ocean RAG for dataset-grounded answers and MarineAI Bot for open-ended marine life conversations.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">⚡</div>
+        <div class="feature-title">Real-Time Data Feed</div>
+        <div class="feature-desc">Live SST readings and oceanographic feeds surface right in the dashboard — always fresh, always current.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🗺️</div>
+        <div class="feature-title">Float Path Tracking</div>
+        <div class="feature-desc">Visualize the trajectories of individual ARGO floats across the Indian Ocean over time.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🔬</div>
+        <div class="feature-title">Analytics Dashboard</div>
+        <div class="feature-desc">Aggregate views, depth profiles, temperature gradients, and salinity trends — all from a single interface.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- AGENTS -->
+<section id="agents" style="background: rgba(0,0,0,0.15);">
+  <div class="wrapper">
+    <div class="reveal">
+      <div class="section-label">Dual Agents</div>
+      <h2 class="section-title">Two brains.<br/>One ocean.</h2>
+      <p class="section-desc">
+        The chat widget in FloatChat runs two specialized agents simultaneously — each designed for a different kind of conversation.
+      </p>
+    </div>
+    <div class="agents-row reveal">
+      <div class="agent-card agent-rag">
+        <div class="agent-tag tag-rag">Agent 01</div>
+        <div class="agent-name">Ocean RAG</div>
+        <div class="agent-desc">
+          Retrieval-Augmented Generation grounded in your pre-fed ARGO datasets. Ask about specific float measurements, depth profiles, temperature anomalies, or salinity trends — and get answers directly derived from your data, not hallucinated.
+        </div>
+        <div class="agent-float">🌊</div>
+      </div>
+      <div class="agent-card agent-marine">
+        <div class="agent-tag tag-marine">Agent 02</div>
+        <div class="agent-name">MarineAI Bot</div>
+        <div class="agent-desc">
+          A free-form LLM assistant specialized in marine biology and ocean science. Ask about species, ecosystems, climate impact on oceans, or any open-ended scientific question. No dataset needed — just curiosity.
+        </div>
+        <div class="agent-float">🐠</div>
+      </div>
+    </div>
+
+    <!-- CHAT DEMO -->
+    <div class="reveal" style="margin-top:48px;">
+      <p style="font-size:0.78rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:16px;">Live Demo Preview</p>
+      <div class="chat-demo">
+        <div class="chat-header">
+          <div class="chat-dot" style="background:#ff5f57;"></div>
+          <div class="chat-dot" style="background:#febc2e;"></div>
+          <div class="chat-dot" style="background:#28c840;"></div>
+          <div class="chat-header-title">🌊 FloatChat Widget</div>
+        </div>
+        <div class="chat-body">
+          <div class="chat-msg user">
+            <div class="chat-avatar av-user">U</div>
+            <div class="chat-bubble">What was the average SST in the Indian Ocean last month?</div>
+          </div>
+          <div class="chat-msg">
+            <div class="chat-avatar av-bot">🌊</div>
+            <div class="chat-bubble">Based on the ARGO float data ingested, the average SST for the Indian Ocean last month was <strong>28.4°C</strong>, with peak readings of 31.2°C near the Arabian Sea.</div>
+          </div>
+          <div class="chat-msg user">
+            <div class="chat-avatar av-user">U</div>
+            <div class="chat-bubble">Tell me about blue whales in the Indian Ocean</div>
+          </div>
+          <div class="chat-msg">
+            <div class="chat-avatar av-bot">🐠</div>
+            <div class="chat-bubble"><div class="typing-indicator"><span></span><span></span><span></span></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TECH STACK -->
+<section id="stack">
+  <div class="wrapper">
+    <div class="reveal">
+      <div class="section-label">Tech Stack</div>
+      <h2 class="section-title">Built with precision<br/>for the deep.</h2>
+      <p class="section-desc">
+        Every layer of FloatChat is chosen for scientific reliability and developer velocity.
+      </p>
+    </div>
+    <div class="tech-grid reveal">
+      <div class="tech-pill"><div class="tech-dot"></div>Python</div>
+      <div class="tech-pill"><div class="tech-dot" style="background:#00ffa3"></div>FastAPI</div>
+      <div class="tech-pill"><div class="tech-dot" style="background:#ff6b35"></div>xarray</div>
+      <div class="tech-pill"><div class="tech-dot"></div>netCDF4</div>
+      <div class="tech-pill"><div class="tech-dot" style="background:#00ffa3"></div>NumPy</div>
+      <div class="tech-pill"><div class="tech-dot" style="background:#ff6b35"></div>Pandas</div>
+      <div class="tech-pill"><div class="tech-dot"></div>Plotly</div>
+      <div class="tech-pill"><div class="tech-dot" style="background:#00ffa3"></div>Matplotlib</div>
+      <div class="tech-pill"><div class="tech-dot" style="background:#ff6b35"></div>Groq API</div>
+      <div class="tech-pill"><div class="tech-dot" style="background:#00ffa3"></div>React + Vite</div>
+      <div class="tech-pill"><div class="tech-dot" style="background:#ff6b35"></div>Git / GitHub</div>
+    </div>
+  </div>
+</section>
+
+<!-- ARCHITECTURE -->
+<section id="architecture" style="background: rgba(0,0,0,0.15);">
+  <div class="wrapper">
+    <div class="reveal">
+      <div class="section-label">Architecture</div>
+      <h2 class="section-title">How it all<br/>flows together.</h2>
+      <p class="section-desc">
+        From raw NetCDF files to a chat response — here's the data pipeline.
+      </p>
+    </div>
+    <div class="arch-flow reveal">
+      <div class="arch-node">
+        <div class="arch-node-icon">🌐</div>
+        <div class="arch-node-name">ARGO Data</div>
+        <div class="arch-node-sub">NetCDF / Float APIs</div>
+      </div>
+      <div class="arch-arrow">→</div>
+      <div class="arch-node">
+        <div class="arch-node-icon">⚙️</div>
+        <div class="arch-node-name">Ingestion</div>
+        <div class="arch-node-sub">xarray · netCDF4</div>
+      </div>
+      <div class="arch-arrow">→</div>
+      <div class="arch-node">
+        <div class="arch-node-icon">🧠</div>
+        <div class="arch-node-name">RAG / LLM</div>
+        <div class="arch-node-sub">Query Interpretation</div>
+      </div>
+      <div class="arch-arrow">→</div>
+      <div class="arch-node">
+        <div class="arch-node-icon">🖥️</div>
+        <div class="arch-node-name">FastAPI</div>
+        <div class="arch-node-sub">REST Backend</div>
+      </div>
+      <div class="arch-arrow">→</div>
+      <div class="arch-node">
+        <div class="arch-node-icon">💬</div>
+        <div class="arch-node-name">FloatChat UI</div>
+        <div class="arch-node-sub">React Frontend</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+
+<!-- FOOTER -->
+<footer>
+  <div class="wrapper">
+    <div style="font-size:2rem;margin-bottom:16px;">🌊</div>
+    <div style="font-family:'Syne',sans-serif;font-size:1.2rem;font-weight:800;color:var(--white);margin-bottom:8px;">FloatChat</div>
+    <div>Indian Ocean Research Platform · Built with 💙 and Python</div>
+    <div style="margin-top:16px;font-size:0.75rem;opacity:0.5;">
+      Active Development · <strong>FastAPI · xarray · Groq API · React</strong>
+    </div>
+  </div>
+</footer>
+
+<script>
+// ── Custom cursor ──
+const cursor = document.getElementById('cursor');
+const ring = document.getElementById('cursor-ring');
+let mx = 0, my = 0, rx = 0, ry = 0;
+document.addEventListener('mousemove', e => { mx = e.clientX; my = e.clientY; });
+function animateCursor() {
+  cursor.style.left = mx + 'px'; cursor.style.top = my + 'px';
+  rx += (mx - rx) * 0.12; ry += (my - ry) * 0.12;
+  ring.style.left = rx + 'px'; ring.style.top = ry + 'px';
+  requestAnimationFrame(animateCursor);
+}
+animateCursor();
+
+// ── Feature card mouse gradient ──
+document.querySelectorAll('.feature-card').forEach(card => {
+  card.addEventListener('mousemove', e => {
+    const r = card.getBoundingClientRect();
+    const x = ((e.clientX - r.left) / r.width * 100).toFixed(1);
+    const y = ((e.clientY - r.top) / r.height * 100).toFixed(1);
+    card.style.setProperty('--mx', x + '%');
+    card.style.setProperty('--my', y + '%');
+  });
+});
+
+// ── Ocean Canvas (animated particles) ──
+const canvas = document.getElementById('ocean-canvas');
+const ctx = canvas.getContext('2d');
+let W = canvas.width = window.innerWidth;
+let H = canvas.height = window.innerHeight;
+window.addEventListener('resize', () => { W = canvas.width = window.innerWidth; H = canvas.height = window.innerHeight; });
+
+const PARTICLE_COUNT = 80;
+const particles = Array.from({length: PARTICLE_COUNT}, () => ({
+  x: Math.random() * W,
+  y: Math.random() * H,
+  r: Math.random() * 1.8 + 0.4,
+  vx: (Math.random() - 0.5) * 0.3,
+  vy: (Math.random() - 0.5) * 0.15 - 0.1,
+  alpha: Math.random() * 0.6 + 0.2,
+}));
+
+// Wave lines
+const WAVES = 4;
+let t = 0;
+
+function drawOcean() {
+  ctx.clearRect(0, 0, W, H);
+
+  // Wave layers
+  for (let w = 0; w < WAVES; w++) {
+    ctx.beginPath();
+    const amp = 18 + w * 8;
+    const freq = 0.006 - w * 0.0008;
+    const speed = 0.0008 + w * 0.0003;
+    const yBase = H * 0.55 + w * 50;
+    ctx.moveTo(0, yBase);
+    for (let x = 0; x <= W; x += 4) {
+      const y = yBase + Math.sin(x * freq + t * speed * (w + 1)) * amp;
+      ctx.lineTo(x, y);
+    }
+    ctx.lineTo(W, H); ctx.lineTo(0, H); ctx.closePath();
+    ctx.fillStyle = `rgba(0,180,255,${0.025 - w * 0.003})`;
+    ctx.fill();
+  }
+
+  // Particles (bubbles / stars)
+  particles.forEach(p => {
+    p.x += p.vx; p.y += p.vy;
+    if (p.x < 0) p.x = W; if (p.x > W) p.x = 0;
+    if (p.y < 0) p.y = H; if (p.y > H) p.y = 0;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(0,212,255,${p.alpha})`;
+    ctx.fill();
+  });
+
+  t++;
+  requestAnimationFrame(drawOcean);
+}
+drawOcean();
+
+// ── Scroll reveal ──
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); } });
+}, { threshold: 0.12 });
+document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+// ── Animate typing indicator delay ──
+setTimeout(() => {
+  const typing = document.querySelector('.typing-indicator').closest('.chat-bubble');
+  typing.innerHTML = "Blue whales are the largest animals on Earth and migrate through the Indian Ocean seasonally. The waters near Sri Lanka are one of the best whale-watching spots globally! 🐋";
+}, 3000);
+</script>
+</body>
+</html>
